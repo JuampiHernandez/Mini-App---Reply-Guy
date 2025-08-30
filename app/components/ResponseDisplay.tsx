@@ -67,7 +67,7 @@ export function ResponseDisplay({
         </label>
         <div className="p-3 bg-[var(--app-gray)]/20 rounded-lg border border-[var(--app-gray)]">
           <p className="text-sm text-[var(--app-foreground)] italic">
-            "{postText}"
+            &ldquo;{postText}&rdquo;
           </p>
         </div>
       </div>
