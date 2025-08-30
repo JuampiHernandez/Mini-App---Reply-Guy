@@ -1,0 +1,32 @@
+# Shared/OnchainKit variables
+
+NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME=🐸 Reply Guy
+NEXT_PUBLIC_URL=https://your-app.vercel.app
+NEXT_PUBLIC_ICON_URL=$NEXT_PUBLIC_URL/icon.png
+NEXT_PUBLIC_ONCHAINKIT_API_KEY=onchaninkit_key
+
+# Frame metadata
+
+FARCASTER_HEADER=your_farcaster_header_here
+FARCASTER_PAYLOAD=your_farcaster_payload_here
+FARCASTER_SIGNATURE=your_farcaster_signature_here
+NEXT_PUBLIC_APP_ICON=$NEXT_PUBLIC_URL/icon.png
+# Optional Frame metadata items below
+NEXT_PUBLIC_APP_SUBTITLE=AI-powered social media replies
+NEXT_PUBLIC_APP_DESCRIPTION=Generate the perfect reply with GPT-4 AI. Choose between Smart & Insightful or Engagement & Viral strategies.
+NEXT_PUBLIC_APP_SPLASH_IMAGE=$NEXT_PUBLIC_URL/splash.png
+NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR="#1F2937"
+NEXT_PUBLIC_APP_PRIMARY_CATEGORY=social
+NEXT_PUBLIC_APP_HERO_IMAGE=$NEXT_PUBLIC_URL/hero.png
+NEXT_PUBLIC_APP_TAGLINE=Perfect replies, every time
+NEXT_PUBLIC_APP_OG_TITLE=🐸 Reply Guy - AI-Powered Social Media Replies
+NEXT_PUBLIC_APP_OG_DESCRIPTION=Generate the perfect reply with GPT-4 AI. Smart, engaging, and viral responses.
+NEXT_PUBLIC_APP_OG_IMAGE=$NEXT_PUBLIC_URL/hero.png
+
+# Redis config
+
+REDIS_URL=
+REDIS_TOKEN=
+
+# OpenAI API
+OPENAI_API_KEY=sk-your_actual_openai_api_key_here

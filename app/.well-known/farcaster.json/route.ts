@@ -12,32 +12,32 @@ function withValidProperties(
 }
 
 export async function GET() {
-  const URL = process.env.NEXT_PUBLIC_URL;
+  const URL = "https://mini-app-reply-guy.vercel.app";
 
   return Response.json({
     accountAssociation: {
-      header: process.env.FARCASTER_HEADER,
-      payload: process.env.FARCASTER_PAYLOAD,
-      signature: process.env.FARCASTER_SIGNATURE,
+      header: "eyJmaWQiOjY3MzAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhCRTE1NjIyNzQ1NkVGY0I1NkZEMDEwMzdGMjNiNWNBNGIxM0QzNkMxIn0",
+      payload: "eyJkb21haW4iOiJtaW5pLWFwcC1yZXBseS1ndXkudmVyY2VsLmFwcCJ9",
+      signature: "MHg2YjQ0ZTM3NzYxMTk1NjUwNzRjY2RlMjM0OTI2YWY2OWM0ZTRmM2I2NGFlMWQ3N2I0ZTM4NjM3MTFmMDczYWJkNmZiOTA3MmQ0Y2FiYjg0NTRjNTY1MmNkYTk2NWE3ZTFkOTkzMjVjNTAzNmQ3ZDUzNWFlM2M3ZmIyMmE1YzJjMDFi"
     },
     frame: withValidProperties({
       version: "1",
-      name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-      subtitle: process.env.NEXT_PUBLIC_APP_SUBTITLE,
-      description: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
-      screenshotUrls: [],
-      iconUrl: process.env.NEXT_PUBLIC_APP_ICON,
-      splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
-      splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
+      name: "🐸 Reply Guy",
+      subtitle: "AI-powered social media replies",
+      description: "Generate the perfect reply with GPT-4 AI. Choose between Smart & Insightful or Engagement & Viral strategies.",
+      screenshotUrls: [`${URL}/screenshot.png`],
+      iconUrl: `${URL}/icon.png`,
+      splashImageUrl: `${URL}/splash.png`,
+      splashBackgroundColor: "#1F2937",
       homeUrl: URL,
       webhookUrl: `${URL}/api/webhook`,
-      primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
-      tags: [],
-      heroImageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
-      tagline: process.env.NEXT_PUBLIC_APP_TAGLINE,
-      ogTitle: process.env.NEXT_PUBLIC_APP_OG_TITLE,
-      ogDescription: process.env.NEXT_PUBLIC_APP_OG_DESCRIPTION,
-      ogImageUrl: process.env.NEXT_PUBLIC_APP_OG_IMAGE,
+      primaryCategory: "social",
+      tags: ["ai", "social-media", "replies", "gpt-4", "farcaster"],
+      heroImageUrl: `${URL}/hero.png`,
+      tagline: "Perfect replies, every time",
+      ogTitle: "🐸 Reply Guy - AI-Powered Social Media Replies",
+      ogDescription: "Generate the perfect reply with GPT-4 AI. Smart, engaging, and viral responses.",
+      ogImageUrl: `${URL}/hero.png`,
     }),
   });
 }
