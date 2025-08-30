@@ -27,10 +27,20 @@ export const metadata: Metadata = {
     images: ["/hero.png"],
   },
   other: {
-    "fc:frame": "vNext",
-    "fc:frame:image": "/hero.png",
-    "fc:frame:button:1": "Generate Reply",
-    "fc:frame:post_url": "/api/webhook",
+    "fc:frame": JSON.stringify({
+      version: "next",
+      imageUrl: "https://mini-app-reply-guy.vercel.app/splash_image.png",
+      button: {
+        title: "Launch Reply Guy",
+        action: {
+          type: "launch_frame",
+          name: "Reply Guy",
+          url: "https://mini-app-reply-guy.vercel.app",
+          splashImageUrl: "https://mini-app-reply-guy.vercel.app/splash_image.png",
+          splashBackgroundColor: "#1F2937",
+        },
+      },
+    }),
   },
 };
 
@@ -41,12 +51,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <meta property="fc:frame" content="vNext" />
-        <meta property="fc:frame:image" content="/hero.png" />
-        <meta property="fc:frame:button:1" content="Generate Reply" />
-        <meta property="fc:frame:post_url" content="/api/webhook" />
-      </head>
       <body className="bg-background">
         <Providers>{children}</Providers>
       </body>
