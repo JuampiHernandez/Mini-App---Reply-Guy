@@ -1,97 +1,61 @@
 "use client";
 
-import {
-  useMiniKit,
-  useAddFrame,
-  useOpenUrl,
-} from "@coinbase/onchainkit/minikit";
-import {
-  Name,
-  Identity,
-  Address,
-  Avatar,
-  EthBalance,
-} from "@coinbase/onchainkit/identity";
-import {
-  ConnectWallet,
-  Wallet,
-  WalletDropdown,
-  WalletDropdownDisconnect,
-} from "@coinbase/onchainkit/wallet";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useState } from "react";
+import { ReplyGuyApp, ResponseType, AnswerLength } from "./components/ReplyGuyApp";
+import { ResponseDisplay } from "./components/ResponseDisplay";
 import { Button } from "./components/DemoComponents";
 import { Icon } from "./components/DemoComponents";
-import { ReplyGuyApp, ResponseType } from "./components/ReplyGuyApp";
-import { ResponseDisplay } from "./components/ResponseDisplay";
 
 export default function App() {
-  const { setFrameReady, isFrameReady, context } = useMiniKit();
-  const [frameAdded, setFrameAdded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedResponse, setGeneratedResponse] = useState<string>("");
-  const [currentPostText, setCurrentPostText] = useState<string>("");
+  const [generatedResponse, setGeneratedResponse] = useState("");
+  const [currentPostText, setCurrentPostText] = useState("");
   const [currentResponseType, setCurrentResponseType] = useState<ResponseType>("smart");
+  const [currentAnswerLength, setCurrentAnswerLength] = useState<AnswerLength>("short");
   const [showResponse, setShowResponse] = useState(false);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
 
-  const addFrame = useAddFrame();
-  const openUrl = useOpenUrl();
-
-  useEffect(() => {
-    if (!isFrameReady) {
-      setFrameReady();
-    }
-  }, [setFrameReady, isFrameReady]);
-
-  const handleAddFrame = useCallback(async () => {
-    const frameAdded = await addFrame();
-    setFrameAdded(Boolean(frameAdded));
-  }, [addFrame]);
-
-  const handleGenerateReply = async (postText: string, context: string, responseType: ResponseType) => {
-    console.log('Starting reply generation:', { postText, context, responseType });
+  const handleGenerateReply = async (postText: string, context: string, responseType: ResponseType, answerLength: AnswerLength) => {
+    console.log("Generating reply:", { postText, context, responseType, answerLength });
     setIsGenerating(true);
     setError("");
     setCurrentPostText(postText);
     setCurrentResponseType(responseType);
-    
+    setCurrentAnswerLength(answerLength);
+
     try {
-      console.log('Making API call to /api/generate-reply');
       const response = await fetch('/api/generate-reply', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          postText,
-          context,
-          responseType,
-        }),
+        body: JSON.stringify({ postText, context, responseType, answerLength }),
       });
 
-      console.log('API response status:', response.status);
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate reply');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('API response data:', data);
-      setGeneratedResponse(data.reply);
-      setShowResponse(true);
+      console.log("API response:", data);
+      
+      if (data.reply) {
+        setGeneratedResponse(data.reply);
+        setShowResponse(true);
+      } else {
+        throw new Error("No reply generated");
+      }
     } catch (error) {
-      console.error('Failed to generate reply:', error);
-      setError(error instanceof Error ? error.message : 'Failed to generate reply');
+      console.error("Error generating reply:", error);
+      setError(error instanceof Error ? error.message : "Failed to generate reply");
     } finally {
-      console.log('Setting isGenerating to false');
       setIsGenerating(false);
     }
   };
 
   const handleRegenerate = () => {
     if (currentPostText) {
-      handleGenerateReply(currentPostText, "", currentResponseType);
+      handleGenerateReply(currentPostText, "", currentResponseType, currentAnswerLength);
     }
   };
 
@@ -102,95 +66,61 @@ export default function App() {
     setError("");
   };
 
-  const saveFrameButton = useMemo(() => {
-    if (context && !context.client.added) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleAddFrame}
-          className="text-[var(--app-accent)] p-4"
-          icon={<Icon name="plus" size="sm" />}
-        >
-          Save Frame
-        </Button>
-      );
-    }
-
-    if (frameAdded) {
-      return (
-        <div className="flex items-center space-x-1 text-sm font-medium text-[#0052FF] animate-fade-out">
-          <Icon name="check" size="sm" className="text-[#0052FF]" />
-          <span>Saved</span>
-        </div>
-      );
-    }
-
-    return null;
-  }, [context, frameAdded, handleAddFrame]);
+  const saveFrameButton = (
+    <Button
+      onClick={() => {
+        if (navigator.share) {
+          navigator.share({
+            title: "Reply Guy",
+            text: "Check out this awesome AI-powered reply generator!",
+            url: window.location.href,
+          });
+        } else {
+          navigator.clipboard.writeText(window.location.href);
+        }
+      }}
+      className="bg-[var(--app-accent)] text-white hover:bg-[var(--app-accent)]/90"
+      icon={<Icon name="heart" size="sm" />}
+    >
+      Share App
+    </Button>
+  );
 
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
-      <div className="w-full max-w-md mx-auto px-4 py-3">
-        <header className="flex justify-between items-center mb-3 h-11">
-          <div>
-            <div className="flex items-center space-x-2">
-              <Wallet className="z-10">
-                <ConnectWallet>
-                  <Name className="text-inherit" />
-                </ConnectWallet>
-                <WalletDropdown>
-                  <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-                    <Avatar />
-                    <Name />
-                    <Address />
-                    <EthBalance />
-                  </Identity>
-                  <WalletDropdownDisconnect />
-                </WalletDropdown>
-              </Wallet>
-            </div>
+      <header className="flex items-center justify-between p-4 border-b border-[var(--app-gray)]">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-[var(--app-accent)] rounded-lg flex items-center justify-center">
+            <Icon name="star" size="sm" className="text-white" />
           </div>
-          <div>{saveFrameButton}</div>
-        </header>
+          <h1 className="text-lg font-semibold">Reply Guy</h1>
+        </div>
+        {saveFrameButton}
+      </header>
 
-        <main className="flex-1">
-          {!showResponse ? (
-            <ReplyGuyApp 
-              onGenerateReply={handleGenerateReply}
-              isGenerating={isGenerating}
-            />
-          ) : (
-            <ResponseDisplay
-              response={generatedResponse}
-              responseType={currentResponseType}
-              postText={currentPostText}
-              onRegenerate={handleRegenerate}
-              onNewReply={handleNewReply}
-            />
-          )}
+      <main className="flex-1 p-4">
+        {!showResponse ? (
+          <ReplyGuyApp onGenerateReply={handleGenerateReply} isGenerating={isGenerating} />
+        ) : (
+          <ResponseDisplay
+            response={generatedResponse}
+            responseType={currentResponseType}
+            answerLength={currentAnswerLength}
+            postText={currentPostText}
+            onRegenerate={handleRegenerate}
+            onNewReply={handleNewReply}
+          />
+        )}
+        {error && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-sm text-red-500">Error: {error}</p>
+          </div>
+        )}
+      </main>
 
-          {/* Error Display */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <p className="text-sm text-red-500">
-                Error: {error}
-              </p>
-            </div>
-          )}
-        </main>
-
-        <footer className="mt-2 pt-4 flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[var(--ock-text-foreground-muted)] text-xs"
-            onClick={() => openUrl("https://base.org/builders/minikit")}
-          >
-            Built on Base with MiniKit
-          </Button>
-        </footer>
-      </div>
+      <footer className="p-4 text-center text-sm text-[var(--ock-text-foreground-muted)] border-t border-[var(--app-gray)]">
+        Powered by GPT-4 AI • Built with OnchainKit
+      </footer>
     </div>
   );
 }

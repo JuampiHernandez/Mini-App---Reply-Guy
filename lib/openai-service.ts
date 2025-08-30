@@ -1,118 +1,124 @@
 import OpenAI from 'openai';
-import { ResponseType } from "../app/components/ReplyGuyApp";
+import { ResponseType, AnswerLength } from "../app/components/ReplyGuyApp";
 
 export class OpenAIService {
   private static client: OpenAI | null = null;
-  
-  // Best model - GPT-4: highest quality replies for best user experience
   private static readonly MODEL = "gpt-4";
-  private static readonly MAX_TOKENS = 150; // Limit response length to control costs
+  private static readonly MAX_TOKENS_SHORT = 100;
+  private static readonly MAX_TOKENS_LONG = 200;
 
   private static getClient(): OpenAI {
     if (!this.client) {
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OPENAI_API_KEY environment variable is not set');
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OpenAI API key not configured');
       }
       this.client = new OpenAI({
-        apiKey: apiKey,
+        apiKey: process.env.OPENAI_API_KEY,
       });
     }
     return this.client;
   }
 
-  private static getSystemPrompt(responseType: ResponseType): string {
-    const prompts = {
-      smart: `You are Reply Guy, an AI expert at generating thoughtful, intelligent social media replies. 
-      Your goal is to create responses that make the user appear knowledgeable and insightful.
-      
-      Guidelines:
-      - Use facts, data, and logical reasoning
-      - Demonstrate expertise in the topic
-      - Encourage meaningful discussion and debate
-      - Keep responses concise but substantial (2-3 sentences)
-      - Be respectful and professional
-      - Avoid generic statements, be specific and actionable`,
-      
-      engagement: `You are Reply Guy, an AI expert at generating viral, engaging social media replies. 
-      Your goal is to create responses that generate high interaction and engagement.
-      
-      Guidelines:
-      - Use humor, memes, and trending references when appropriate
-      - Create controversial or thought-provoking takes
-      - Encourage reactions, replies, and reposts
-      - Use emojis and casual language
-      - Be entertaining and shareable
-      - Keep responses concise (1-2 sentences)
-      - Avoid being offensive or harmful`
-    };
+  private static getSystemPrompt(responseType: ResponseType, answerLength: AnswerLength): string {
+    const lengthInstruction = answerLength === "short" 
+      ? "Keep your response concise and punchy, under 100 words." 
+      : "Provide a detailed and comprehensive response, around 150-200 words.";
 
-    return prompts[responseType] || prompts.smart;
+    const basePrompt = `You are Reply Guy, an AI assistant that generates perfect social media replies. ${lengthInstruction}
+
+Your responses should be:
+- Natural and conversational
+- Engaging and authentic
+- Free of emojis and excessive punctuation
+- Tailored to the specific post content
+- Appropriate for the chosen strategy`;
+
+    switch (responseType) {
+      case "smart":
+        return `${basePrompt}
+
+For Smart & Insightful responses:
+- Add genuine value to the conversation
+- Show thoughtfulness and intelligence
+- Provide insights or perspectives that enhance the discussion
+- Be respectful and constructive
+- Avoid being overly formal or academic`;
+      
+      case "engagement":
+        return `${basePrompt}
+
+For Engagement & Viral responses:
+- Create content that encourages interaction
+- Use hooks and questions that invite replies
+- Be entertaining and shareable
+- Include elements that make people want to engage
+- Balance humor with authenticity`;
+      
+      default:
+        return basePrompt;
+    }
   }
 
-  static async generateReply(
-    postText: string, 
-    context: string, 
-    responseType: ResponseType
-  ): Promise<string> {
+  static async generateReply(postText: string, context: string, responseType: ResponseType, answerLength: AnswerLength): Promise<string> {
+    const client = this.getClient();
+    
+    const maxTokens = answerLength === "short" ? this.MAX_TOKENS_SHORT : this.MAX_TOKENS_LONG;
+    const systemPrompt = this.getSystemPrompt(responseType, answerLength);
+    
+    const userPrompt = `Post to reply to: "${postText}"${context ? `\n\nAdditional context: ${context}` : ''}
+
+Please generate a ${answerLength} ${responseType} reply. Remember: no emojis, be natural and engaging.`;
+
     try {
-      const client = this.getClient();
-      
-      const systemPrompt = this.getSystemPrompt(responseType);
-      const userPrompt = `Generate a ${responseType} reply to this post: "${postText}"${context ? `\n\nAdditional context: ${context}` : ''}`;
-
-      console.log(`Using ${this.MODEL} for ${responseType} response`);
-
       const completion = await client.chat.completions.create({
         model: this.MODEL,
         messages: [
-          {
-            role: "system",
-            content: systemPrompt
-          },
-          {
-            role: "user",
-            content: userPrompt
-          }
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
         ],
-        max_tokens: this.MAX_TOKENS,
+        max_tokens: maxTokens,
         temperature: 0.7,
         top_p: 0.9,
       });
 
-      const response = completion.choices[0]?.message?.content;
-      if (!response) {
-        throw new Error('No response generated from OpenAI');
+      const reply = completion.choices[0]?.message?.content?.trim();
+      
+      if (!reply) {
+        throw new Error('No reply generated from OpenAI');
       }
 
-      // Log token usage for cost tracking
+      // Log token usage and estimated cost
       const usage = completion.usage;
       if (usage) {
-        console.log(`Tokens used: ${usage.total_tokens} (input: ${usage.prompt_tokens}, output: ${usage.completion_tokens})`);
-        console.log(`Estimated cost: $${((usage.total_tokens / 1000) * 0.03).toFixed(6)}`);
+        const inputCost = (usage.prompt_tokens / 1000) * 0.03; // $0.03 per 1K input tokens
+        const outputCost = (usage.completion_tokens / 1000) * 0.06; // $0.06 per 1K output tokens
+        const totalCost = inputCost + outputCost;
+        
+        console.log(`Token usage: ${usage.prompt_tokens} input + ${usage.completion_tokens} output = ${usage.total_tokens} total`);
+        console.log(`Estimated cost: $${totalCost.toFixed(4)}`);
       }
 
-      return response.trim();
+      return reply;
     } catch (error) {
-      console.error('OpenAI API error:', error);
+      console.error('Error generating reply with OpenAI:', error);
       
-      // Fallback to a simple response if API fails
+      // Fallback responses based on type and length
       const fallbackResponses = {
-        smart: "This is an interesting perspective that deserves thoughtful consideration.",
-        engagement: "This is the kind of content that gets people talking! 🔥"
+        smart: {
+          short: "That's an interesting point. I'd love to hear more about your perspective on this.",
+          long: "This is a really thoughtful observation. I think it raises some important questions about how we approach these kinds of situations. What do you think would be the best way to move forward with this?"
+        },
+        engagement: {
+          short: "This is fascinating! What do you think about it?",
+          long: "Wow, this really got me thinking! I'm curious to hear what others think about this perspective. Has anyone else experienced something similar? What was your takeaway?"
+        }
       };
-      
-      return fallbackResponses[responseType] || fallbackResponses.smart;
+
+      return fallbackResponses[responseType][answerLength] || "Thanks for sharing this! I'd love to hear more about your thoughts.";
     }
   }
 
-  // Get model info for reference
-  static getModelInfo(): { model: string; cost: string; quality: string; description: string } {
-    return {
-      model: "GPT-4",
-      cost: "Premium ($0.03/1K tokens)",
-      quality: "Best",
-      description: "Highest quality replies for the best user experience"
-    };
+  static getModelInfo(): string {
+    return `Using ${this.MODEL} for high-quality reply generation`;
   }
 }

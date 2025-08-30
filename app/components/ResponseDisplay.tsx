@@ -3,24 +3,64 @@
 import { useState } from "react";
 import { Button } from "./DemoComponents";
 import { Icon } from "./DemoComponents";
-import { ResponseType } from "./ReplyGuyApp";
+import { ResponseType, AnswerLength } from "./ReplyGuyApp";
 
-interface ResponseDisplayProps {
+export interface ResponseDisplayProps {
   response: string;
   responseType: ResponseType;
+  answerLength: AnswerLength;
   postText: string;
   onRegenerate: () => void;
   onNewReply: () => void;
 }
 
-export function ResponseDisplay({ 
-  response, 
-  responseType, 
-  postText, 
-  onRegenerate, 
-  onNewReply 
-}: ResponseDisplayProps) {
+function getResponseTypeInfo(responseType: ResponseType) {
+  switch (responseType) {
+    case "smart":
+      return {
+        title: "Smart & Insightful Response",
+        description: "Thoughtful, intelligent response that adds value to the conversation",
+        color: "text-blue-600"
+      };
+    case "engagement":
+      return {
+        title: "Engagement & Viral Response",
+        description: "Engaging response designed to boost interaction and reach",
+        color: "text-green-600"
+      };
+    default:
+      return {
+        title: "Generated Response",
+        description: "AI-generated reply",
+        color: "text-gray-600"
+      };
+  }
+}
+
+function getAnswerLengthInfo(answerLength: AnswerLength) {
+  switch (answerLength) {
+    case "short":
+      return {
+        label: "Short",
+        description: "Concise & punchy response"
+      };
+    case "long":
+      return {
+        label: "Long",
+        description: "Detailed & comprehensive response"
+      };
+    default:
+      return {
+        label: "Standard",
+        description: "Balanced response length"
+      };
+  }
+}
+
+export function ResponseDisplay({ response, responseType, answerLength, postText, onRegenerate, onNewReply }: ResponseDisplayProps) {
   const [copied, setCopied] = useState(false);
+  const responseTypeInfo = getResponseTypeInfo(responseType);
+  const lengthInfo = getAnswerLengthInfo(answerLength);
 
   const handleCopy = async () => {
     try {
@@ -28,39 +68,26 @@ export function ResponseDisplay({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      console.error("Failed to copy text: ", err);
     }
   };
-
-  const getResponseTypeInfo = (type: ResponseType) => {
-    switch (type) {
-      case "smart":
-        return { icon: "🧠", label: "Smart & Insightful", color: "text-blue-500" };
-      case "engagement":
-        return { icon: "🚀", label: "Engagement & Viral", color: "text-orange-500" };
-      default:
-        return { icon: "✨", label: "AI Generated", color: "text-gray-500" };
-    }
-  };
-
-  const typeInfo = getResponseTypeInfo(responseType);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="text-center space-y-2">
-        <div className="flex items-center justify-center space-x-2">
-          <span className="text-2xl">{typeInfo.icon}</span>
-          <h2 className="text-xl font-bold text-[var(--app-foreground)]">
-            Your Perfect Reply
-          </h2>
+        <h2 className="text-xl font-semibold text-[var(--app-foreground)]">
+          Your Perfect Reply is Ready!
+        </h2>
+        <div className="flex items-center justify-center space-x-4 text-sm text-[var(--ock-text-foreground-muted)]">
+          <span className={`px-2 py-1 rounded-full bg-[var(--app-gray)]/20 ${responseTypeInfo.color}`}>
+            {responseTypeInfo.title}
+          </span>
+          <span className="px-2 py-1 rounded-full bg-[var(--app-gray)]/20">
+            {lengthInfo.label} Response
+          </span>
         </div>
-        <p className="text-sm text-[var(--ock-text-foreground-muted)]">
-          Generated using {typeInfo.label} strategy
-        </p>
       </div>
 
-      {/* Original Post Context */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-[var(--app-foreground)]">
           Original Post
@@ -72,20 +99,16 @@ export function ResponseDisplay({
         </div>
       </div>
 
-      {/* Generated Response */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-[var(--app-foreground)]">
-          AI Generated Reply
+          Generated Response
         </label>
-        <div className="p-4 bg-gradient-to-br from-[var(--app-accent)]/10 to-[var(--app-accent)]/5 rounded-lg border border-[var(--app-accent)]/20">
-          <p className="text-[var(--app-foreground)] leading-relaxed">
-            {response}
-          </p>
+        <div className="p-4 bg-[var(--app-accent)]/5 border border-[var(--app-accent)]/20 rounded-lg">
+          <p className="text-[var(--app-foreground)] whitespace-pre-wrap">{response}</p>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col space-y-3">
+      <div className="space-y-4">
         <Button
           onClick={handleCopy}
           className="w-full bg-[var(--app-accent)] text-white hover:bg-[var(--app-accent)]/90"
@@ -95,18 +118,17 @@ export function ResponseDisplay({
         </Button>
         
         <div className="grid grid-cols-2 gap-3">
-          <Button
-            variant="ghost"
-            onClick={onRegenerate}
+          <Button 
+            variant="ghost" 
+            onClick={onRegenerate} 
             className="border border-[var(--app-gray)] hover:border-[var(--app-accent)]/50"
             icon={<Icon name="refresh" size="sm" />}
           >
             Regenerate
           </Button>
-          
-          <Button
-            variant="ghost"
-            onClick={onNewReply}
+          <Button 
+            variant="ghost" 
+            onClick={onNewReply} 
             className="border border-[var(--app-gray)] hover:border-[var(--app-accent)]/50"
             icon={<Icon name="plus" size="sm" />}
           >
@@ -115,11 +137,9 @@ export function ResponseDisplay({
         </div>
       </div>
 
-      {/* Instructions */}
-      <div className="text-center p-3 bg-[var(--app-gray)]/10 rounded-lg">
-        <p className="text-xs text-[var(--ock-text-foreground-muted)]">
-          Copy the reply above and paste it manually in your Farcaster app
-        </p>
+      <div className="text-center text-xs text-[var(--ock-text-foreground-muted)] space-y-1">
+        <p>Click the info badges above to see what each option means</p>
+        <p>Use the buttons below to copy, regenerate, or create a new reply</p>
       </div>
     </div>
   );
