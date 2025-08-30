@@ -23,7 +23,7 @@ export async function GET() {
     frame: withValidProperties({
       version: "1",
       name: "Reply Guy",
-      subtitle: "AI-powered social media replies",
+      subtitle: "AI social replies",
       description: "Generate the perfect reply with GPT4 AI. Choose between Smart and Insightful or Engagement and Viral strategies.",
       screenshotUrls: [`${URL}/screenshot.png`],
       iconUrl: `${URL}/icon.png`,
@@ -35,7 +35,7 @@ export async function GET() {
       tags: ["ai", "social-media", "replies", "gpt4", "farcaster"],
       heroImageUrl: `${URL}/hero.png`,
       tagline: "Perfect replies, every time",
-      ogTitle: "Reply Guy - AI-Powered Social Media Replies",
+      ogTitle: "Reply Guy - AI Replies",
       ogDescription: "Generate the perfect reply with GPT4 AI. Smart, engaging, and viral responses.",
       ogImageUrl: `${URL}/hero.png`,
     }),
