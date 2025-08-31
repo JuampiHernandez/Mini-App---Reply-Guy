@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useMiniKit, useAddFrame } from "@coinbase/onchainkit/minikit";
 import { ReplyGuyApp, ResponseType, AnswerLength } from "./components/ReplyGuyApp";
 import { ResponseDisplay } from "./components/ResponseDisplay";
 import { Button } from "./components/DemoComponents";
 import { Icon } from "./components/DemoComponents";
 
 export default function App() {
+  const { setFrameReady, isFrameReady } = useMiniKit();
+  const [frameAdded, setFrameAdded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedResponse, setGeneratedResponse] = useState("");
   const [currentPostText, setCurrentPostText] = useState("");
@@ -14,6 +17,19 @@ export default function App() {
   const [currentAnswerLength, setCurrentAnswerLength] = useState<AnswerLength>("short");
   const [showResponse, setShowResponse] = useState(false);
   const [error, setError] = useState("");
+
+  const addFrame = useAddFrame();
+
+  useEffect(() => {
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [setFrameReady, isFrameReady]);
+
+  const handleAddFrame = useCallback(async () => {
+    const frameAdded = await addFrame();
+    setFrameAdded(Boolean(frameAdded));
+  }, [addFrame]);
 
   const handleGenerateReply = async (postText: string, context: string, responseType: ResponseType, answerLength: AnswerLength) => {
     console.log("Generating reply:", { postText, context, responseType, answerLength });
@@ -66,23 +82,20 @@ export default function App() {
     setError("");
   };
 
-  const saveFrameButton = (
+  const saveFrameButton = frameAdded ? (
+    <div className="flex items-center space-x-1 text-sm font-medium text-[#0052FF]">
+      <Icon name="check" size="sm" className="text-[#0052FF]" />
+      <span>Saved</span>
+    </div>
+  ) : (
     <Button
-      onClick={() => {
-        if (navigator.share) {
-          navigator.share({
-            title: "Reply Guy",
-            text: "Check out this awesome AI-powered reply generator!",
-            url: window.location.href,
-          });
-        } else {
-          navigator.clipboard.writeText(window.location.href);
-        }
-      }}
-      className="bg-[var(--app-accent)] text-white hover:bg-[var(--app-accent)]/90"
-      icon={<Icon name="heart" size="sm" />}
+      variant="ghost"
+      size="sm"
+      onClick={handleAddFrame}
+      className="text-[var(--app-accent)] p-4"
+      icon={<Icon name="plus" size="sm" />}
     >
-      Share App
+      Save Frame
     </Button>
   );
 
